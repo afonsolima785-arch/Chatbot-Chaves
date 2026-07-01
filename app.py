@@ -110,6 +110,13 @@ st.markdown("""
         border: 1px solid #B8D4F0;
     }
 
+    /* TEXTO DAS MENSAGENS – COR ESCURA E LEGÍVEL */
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] div {
+        color: #1E293B !important;
+    }
+
     /* Campo de entrada do chat */
     [data-testid="stChatInput"] textarea {
         border-radius: 12px !important;
@@ -248,7 +255,7 @@ if st.session_state.messages[-1]["role"] == "user":
     with st.chat_message("assistant"):
         try:
             stream = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="llama3-8b-8192",
                 messages=st.session_state.messages,
                 stream=True,
                 temperature=0.7,
