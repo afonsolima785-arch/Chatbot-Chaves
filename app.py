@@ -18,15 +18,7 @@ st.set_page_config(
 )
 
 # =============================================================================
-# VERIFICAÇÃO ANTECIPADA DA PASSWORD (Segura sem quebrar o CSS)
-# =============================================================================
-if "campo_senha_admin" not in st.session_state:
-    st.session_state["campo_senha_admin"] = ""
-
-eh_admin = (st.session_state["campo_senha_admin"] == "Liljuice13..")
-
-# =============================================================================
-# CSS PERSONALIZADO – VISUAL CORPORATIVO
+# CSS BASE – VISUAL CORPORATIVO (Sem nenhuma f-string ou lógica complexa)
 # =============================================================================
 st.markdown(
     """
@@ -103,53 +95,7 @@ st.markdown(
 )
 
 # =============================================================================
-# INJEÇÃO DO BLOQUEIO DO BOTÃO MANAGE APP (Apenas se NÃO for o dono autenticado)
-# =============================================================================
-if not eh_admin:
-    st.markdown(
-        """
-    <style>
-        /* Oculta completamente o botão Manage App para visitantes comuns */
-        [data-testid="stStatusWidget"], .viewerBadge_link__1S16K, [class^="viewerBadge"] {
-            display: none !important;
-        }
-        iframe[src*="manage"], iframe[title="Manage app"] {
-            display: none !important;
-        }
-    </style>
-    """,
-        unsafe_allow_html=True,
-    )
-
-# =============================================================================
-# PROMPT DE SISTEMA – BLINDAGEM RÍGIDA
-# =============================================================================
-SYSTEM_PROMPT = """
-Você é o 'Chaves Sigmabot', um assistente virtual exclusivo da cidade de Chaves, Portugal.
-A sua única missão é fornecer informações precisas, úteis e encantadoras sobre Chaves, incluindo:
-- História, património (Castelo, Ponte de Trajano, etc.)
-- Termas e águas termais
-- Gastronomia (Pastéis de Chaves, presunto, vinhos, restaurantes)
-- Alojamento, turismo rural, hotéis
-- Eventos culturais, festas e tradições
-- Roteiros, sugestões de visita, curiosidades
-
-**REGRAS INQUEBRÁVEIS:**
-- NUNCA responda a perguntas que não estejam diretamente relacionadas com Chaves.
-- Se o utilizador perguntar sobre programação, matemática, política, culinária geral, outras cidades ou qualquer tópico alheio, recuse educadamente usando EXATAMENTE a frase:
-  "Como assistente exclusivo da cidade de Chaves, estou programado para responder apenas a questões turísticas, históricas ou culturais da nossa região."
-- Mesmo que o utilizador insista, mantenha sempre a mesma resposta padrão.
-- Responda sempre em português de Portugal, com um tom acolhedor e profissional.
-"""
-
-# =============================================================================
-# INICIALIZAÇÃO DO ESTADO DA SESSÃO
-# =============================================================================
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
-# =============================================================================
-# BARRA LATERAL
+# BARRA LATERAL (Construção da Interface)
 # =============================================================================
 with st.sidebar:
     st.title("🏰 Chaves Sigmabot")
@@ -159,7 +105,18 @@ with st.sidebar:
     )
     st.markdown("---")
 
-    # Botão para limpar histórico (mantém o system prompt)
+    # PROMPT DE SISTEMA – BLINDAGEM RÍGIDA
+    SYSTEM_PROMPT = """
+    Você é o 'Chaves Sigmabot', um assistente virtual exclusivo da cidade de Chaves, Portugal.
+    A sua única missão é fornecer informações precisas, úteis e encantadoras sobre Chaves.
+    Responda sempre em português de Portugal.
+    """
+
+    # Inicialização básica do histórico se não existir
+    if "messages" not in st.session_state:
+        st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+    # Botão para limpar histórico
     if st.button("🗑️ Limpar Histórico", use_container_width=True):
         st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         st.rerun()
@@ -173,25 +130,44 @@ with st.sidebar:
         "Melhores hotéis no centro histórico",
         "O que visitar com crianças em Chaves?",
     ]
-    # Cada botão adiciona a sugestão como mensagem do utilizador
+    
     for suggestion in suggestions:
         if st.button(suggestion, key=suggestion):
             st.session_state.messages.append({"role": "user", "content": suggestion})
             st.rerun()
 
     # -------------------------------------------------------------------------
-    # TRANCA DE SEGURANÇA COM ATIVAÇÃO VISUAL DO BOTÃO MANAGE APP
+    # SECÇÃO DA PASSWORD (Simples e direta)
     # -------------------------------------------------------------------------
     st.markdown("---")
     st.subheader("🔒 Área do Proprietário")
     
-    # Campo de texto acoplado à sessão do Streamlit
-    senha_digitada = st.text_input("Chave Admin", type="password", key="campo_senha_admin")
+    # Caixa de texto normal para a password
+    senha_digitada = st.text_input("Chave Admin", type="password")
+    eh_admin = (senha_digitada == "Liljuice13..")
     
     if eh_admin:
         st.success("Modo Admin Ativo! 🛠️")
-        st.caption("O botão 'Manage app' voltou a aparecer no canto inferior direito.")
 
+
+# =============================================================================
+# INJEÇÃO DO BLOQUEIO DO BOTÃO MANAGE APP (Apenas se NÃO for o dono correto)
+# =============================================================================
+if not eh_admin:
+    st.markdown(
+        """
+    <style>
+        /* Desativa por completo o botão preto Manage App do ecrã público */
+        [data-testid="stStatusWidget"], .viewerBadge_link__1S16K, [class^="viewerBadge"], iframe[title="Manage app"], iframe[src*="manage"] {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0px !important;
+            width: 0px !important;
+        }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
 
 # =============================================================================
 # ÁREA PRINCIPAL DO CHAT
@@ -206,24 +182,16 @@ for msg in st.session_state.messages:
 
 # Entrada de texto do utilizador
 if prompt := st.chat_input("Faça uma pergunta sobre Chaves..."):
-    # Adiciona e mostra a mensagem do utilizador
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+    st.rerun()
 
 # Geração de resposta automática sempre que a última mensagem for do utilizador
 if st.session_state.messages[-1]["role"] == "user":
-    # Obter chave da API da Groq (segura via Streamlit Secrets)
     groq_api_key = st.secrets.get("GROQ_API_KEY")
     if not groq_api_key:
-        st.error(
-            "⚠️ Chave da API Groq não configurada. "
-            "Para usar a aplicação, adicione `GROQ_API_KEY` nos segredos do Streamlit Cloud "
-            "ou no ficheiro `.streamlit/secrets.toml` local."
-        )
+        st.error("⚠️ Chave da API Groq não configurada nos Secrets do Streamlit Cloud.")
         st.stop()
 
-    # Criar cliente OpenAI apontado para a Groq
     client = OpenAI(
         base_url="https://groq.com",
         api_key=groq_api_key,
@@ -231,21 +199,18 @@ if st.session_state.messages[-1]["role"] == "user":
 
     with st.chat_message("assistant"):
         try:
-            # Chamada à API com streaming
             stream = client.chat.completions.create(
-                model="llama-3.1-8b-instant",  # Modelo gratuito da Groq
+                model="llama-3.1-8b-instant",
                 messages=st.session_state.messages,
                 stream=True,
                 temperature=0.7,
                 max_tokens=1024,
             )
-            # Efeito de "streaming" (palavras a aparecer)
             response = st.write_stream(stream)
         except Exception as e:
             response = f"Lamento, ocorreu um erro inesperado: {str(e)}"
             st.write(response)
 
-    # Guardar a resposta do assistente no histórico
     st.session_state.messages.append({"role": "assistant", "content": response})
 
 
@@ -256,3 +221,6 @@ if eh_admin:
     st.markdown("---")
     st.subheader("🛠️ Painel de Gestão e Monitorização (Exclusivo)")
     st.write("Bem-vindo, Afonso. Este painel está oculto para todos os utilizadores comuns.")
+    
+    if st.checkbox("👁️ Ver Logs/Histórico Completo da Conversa Atual"):
+        st.json(st.session_state.messages)
