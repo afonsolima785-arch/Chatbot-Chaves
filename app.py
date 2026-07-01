@@ -192,7 +192,7 @@ if st.session_state.messages[-1]["role"] == "user":
         try:
             # Chamada à API com streaming
             stream = client.chat.completions.create(
-                model="llama3-8b-instant",  # Modelo gratuito da Groq (também disponível: llama3-70b-8192)
+               model="llama-3.1-8b-instant",  # Modelo gratuito da Groq (também disponível: llama3-70b-8192)
                 messages=st.session_state.messages,
                 stream=True,
                 temperature=0.7,
