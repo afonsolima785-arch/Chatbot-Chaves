@@ -18,6 +18,12 @@ st.set_page_config(
 )
 
 # =============================================================================
+# INICIALIZAÇÃO DAS VARIÁVEIS DE CONTROLO
+# =============================================================================
+if "modo_admin" not in st.session_state:
+    st.session_state["modo_admin"] = False
+
+# =============================================================================
 # CSS PERSONALIZADO – VISUAL CORPORATIVO
 # =============================================================================
 st.markdown(
@@ -152,6 +158,29 @@ with st.sidebar:
             st.session_state.messages.append({"role": "user", "content": suggestion})
             st.rerun()
 
+    # -------------------------------------------------------------------------
+    # TRANCA DE SEGURANÇA COM A SUA PASSWORD DEFINIDA
+    # -------------------------------------------------------------------------
+    st.markdown("---")
+    st.subheader("🔒 Área do Proprietário")
+    
+    if not st.session_state["modo_admin"]:
+        senha = st.text_input("Password Admin", type="password", key="admin_pwd_input")
+        if st.button("Ativar Modo Admin", use_container_width=True):
+            # Validação direta da password escolhida por si
+            if senha == "Liljuice13..":
+                st.session_state["modo_admin"] = True
+                st.success("Acesso concedido!")
+                st.rerun()
+            else:
+                st.error("Chave inválida!")
+    else:
+        st.success("Modo Admin Ativo!")
+        if st.button("Sair (Modo Público)", use_container_width=True):
+            st.session_state["modo_admin"] = False
+            st.rerun()
+
+
 # =============================================================================
 # ÁREA PRINCIPAL DO CHAT
 # =============================================================================
@@ -184,7 +213,7 @@ if st.session_state.messages[-1]["role"] == "user":
 
     # Criar cliente OpenAI apontado para a Groq
     client = OpenAI(
-        base_url="https://api.groq.com/openai/v1",
+        base_url="https://groq.com",
         api_key=groq_api_key,
     )
 
@@ -192,7 +221,7 @@ if st.session_state.messages[-1]["role"] == "user":
         try:
             # Chamada à API com streaming
             stream = client.chat.completions.create(
-               model="llama-3.1-8b-instant",  # Modelo gratuito da Groq (também disponível: llama3-70b-8192)
+                model="llama-3.1-8b-instant",  # Modelo gratuito da Groq
                 messages=st.session_state.messages,
                 stream=True,
                 temperature=0.7,
@@ -206,3 +235,18 @@ if st.session_state.messages[-1]["role"] == "user":
 
     # Guardar a resposta do assistente no histórico
     st.session_state.messages.append({"role": "assistant", "content": response})
+
+
+# =============================================================================
+# PAINEL DE GESTÃO EXCLUSIVO (Apenas visível se estiver autenticado)
+# =============================================================================
+if st.session_state["modo_admin"]:
+    st.markdown("---")
+    st.subheader("🛠️ Painel de Gestão e Monitorização (Exclusivo)")
+    st.write("Bem-vindo, Afonso. Aqui podes gerir aspetos internos do teu bot de forma oculta do público.")
+    
+    # Ver o JSON estruturado do histórico da conversa atual
+    if st.checkbox("👁️ Ver Logs/Histórico Completo da Conversa Atual"):
+        st.json(st.session_state.messages)
+        
+    st.caption("As tuas chaves e acessos estão seguros. Os visitantes normais não conseguem ler este painel.")
