@@ -110,13 +110,6 @@ st.markdown("""
         border: 1px solid #B8D4F0;
     }
 
-    /* TEXTO APENAS DO ASSISTENTE – PRETO ABSOLUTO */
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageIcon"][aria-label="assistant"]) p,
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageIcon"][aria-label="assistant"]) span,
-    [data-testid="stChatMessage"]:has([data-testid="stChatMessageIcon"][aria-label="assistant"]) div {
-        color: #000000 !important;
-    }
-
     /* Campo de entrada do chat */
     [data-testid="stChatInput"] textarea {
         border-radius: 12px !important;
