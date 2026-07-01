@@ -4,7 +4,7 @@ Usa a API gratuita da Groq (modelo Llama 3) através da biblioteca OpenAI.
 Interface profissional construída com Streamlit e CSS personalizado.
 """
 
-import streamlit as st
+import streamlit as str
 from openai import OpenAI
 
 # =============================================================================
@@ -18,29 +18,45 @@ st.set_page_config(
 )
 
 # =============================================================================
-# INICIALIZAÇÃO DAS VARIÁVEIS DE CONTROLO
+# NOVO: VERIFICAÇÃO ANTECIPADA DA PASSWORD (Para controlo do CSS dinâmico)
 # =============================================================================
-if "modo_admin" not in st.session_state:
-    st.session_state["modo_admin"] = False
+# Inicializa o campo na primeira execução para evitar erros
+if "campo_senha_admin" not in st.session_state:
+    st.session_state["campo_senha_admin"] = ""
+
+# Determina se és tu com base no texto atual da caixa de input
+eh_admin = (st.session_state["campo_senha_admin"] == "Liljuice13..")
 
 # =============================================================================
-# CSS PERSONALIZADO – VISUAL CORPORATIVO
+# CSS PERSONALIZADO – VISUAL CORPORATIVO + CONTROLO INTELIGENTE DO BOTÃO
 # =============================================================================
+# Se NÃO fores admin, aplicamos CSS para sumir com o botão. Se FORES, o CSS não se aplica e o botão aparece!
+css_botao_manage = """
+    /* Oculta o widget de estado e assinaturas do Streamlit */
+    [data-testid="stStatusWidget"], .viewerBadge_link__1S16K, [class^="viewerBadge"] {
+        display: none !important;
+    }
+    /* Bloqueia o carregamento do elemento do botão Manage App */
+    iframe[src*="manage"], iframe[title="Manage app"] {
+        display: none !important;
+    }
+""" if not eh_admin else ""
+
 st.markdown(
-    """
+    f"""
 <style>
     /* Fundo geral da página */
-    .stApp {
+    .stApp {{
         background-color: #F0F4F8;
-    }
+    }}
 
     /* Barra lateral */
-    section[data-testid="stSidebar"] {
+    section[data-testid="stSidebar"] {{
         background-color: #0A2540;
         color: white;
         padding: 2rem 1rem;
-    }
-    section[data-testid="stSidebar"] .stButton>button {
+    }}
+    section[data-testid="stSidebar"] .stButton>button {{
         background-color: #2B4C7E;
         color: white;
         border-radius: 10px;
@@ -48,53 +64,56 @@ st.markdown(
         padding: 0.5rem 1rem;
         font-weight: bold;
         transition: all 0.2s ease;
-    }
-    section[data-testid="stSidebar"] .stButton>button:hover {
+    }}
+    section[data-testid="stSidebar"] .stButton>button:hover {{
         background-color: #1E3A5F;
         transform: scale(1.02);
-    }
-    section[data-testid="stSidebar"] .stMarkdown {
+    }}
+    section[data-testid="stSidebar"] .stMarkdown {{
         color: white;
-    }
+    }}
 
     /* Mensagens do chat */
-    div[data-testid="stChatMessage"] {
+    div[data-testid="stChatMessage"] {{
         border-radius: 15px;
         padding: 1rem;
         margin-bottom: 0.8rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         line-height: 1.5;
-    }
+    }}
 
     /* Mensagem do utilizador */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="user"]) {
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="user"]) {{
         background-color: #1E3A5F;
         color: white;
-    }
+    }}
 
     /* Mensagem do assistente */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="assistant"]) {
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="assistant"]) {{
         background-color: #FFFFFF;
         border: 1px solid #D1D9E0;
-    }
+    }}
 
     /* Campo de input do chat */
-    div[data-testid="stChatInput"] textarea {
+    div[data-testid="stChatInput"] textarea {{
         border-radius: 20px !important;
         border: 1px solid #CBD5E1 !important;
-    }
+    }}
 
-    /* Ocultar menu e rodapé do Streamlit (opcional) */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    /* Ocultar menus e rodapés antigos do Streamlit */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
+
+    /* Injeção dinâmica para esconder/mostrar o botão Manage App */
+    {css_botao_manage}
 
     /* Ajustes para ecrãs pequenos */
-    @media (max-width: 768px) {
-        section[data-testid="stSidebar"] {
+    @media (max-width: 768px) {{
+        section[data-testid="stSidebar"] {{
             padding: 1rem 0.5rem;
         }
-    }
+    }}
 </style>
 """,
     unsafe_allow_html=True,
@@ -159,26 +178,17 @@ with st.sidebar:
             st.rerun()
 
     # -------------------------------------------------------------------------
-    # TRANCA DE SEGURANÇA COM A SUA PASSWORD DEFINIDA
+    # TRANCA DE SEGURANÇA COM ATIVAÇÃO VISUAL DO BOTÃO MANAGE APP
     # -------------------------------------------------------------------------
     st.markdown("---")
     st.subheader("🔒 Área do Proprietário")
     
-    if not st.session_state["modo_admin"]:
-        senha = st.text_input("Password Admin", type="password", key="admin_pwd_input")
-        if st.button("Ativar Modo Admin", use_container_width=True):
-            # Validação direta da password escolhida por si
-            if senha == "Liljuice13..":
-                st.session_state["modo_admin"] = True
-                st.success("Acesso concedido!")
-                st.rerun()
-            else:
-                st.error("Chave inválida!")
-    else:
-        st.success("Modo Admin Ativo!")
-        if st.button("Sair (Modo Público)", use_container_width=True):
-            st.session_state["modo_admin"] = False
-            st.rerun()
+    # Campo de texto acoplado à sessão do Streamlit
+    senha_digitada = st.text_input("Chave Admin", type="password", key="campo_senha_admin")
+    
+    if eh_admin:
+        st.success("Modo Admin Ativo! 🛠️")
+        st.caption("O botão 'Manage app' voltou a aparecer no canto inferior direito apenas para ti.")
 
 
 # =============================================================================
@@ -238,15 +248,8 @@ if st.session_state.messages[-1]["role"] == "user":
 
 
 # =============================================================================
-# PAINEL DE GESTÃO EXCLUSIVO (Apenas visível se estiver autenticado)
+# PAINEL DE GESTÃO EXCLUSIVO (Apenas aparece quando digitas a password certa)
 # =============================================================================
-if st.session_state["modo_admin"]:
+if eh_admin:
     st.markdown("---")
     st.subheader("🛠️ Painel de Gestão e Monitorização (Exclusivo)")
-    st.write("Bem-vindo, Afonso. Aqui podes gerir aspetos internos do teu bot de forma oculta do público.")
-    
-    # Ver o JSON estruturado do histórico da conversa atual
-    if st.checkbox("👁️ Ver Logs/Histórico Completo da Conversa Atual"):
-        st.json(st.session_state.messages)
-        
-    st.caption("As tuas chaves e acessos estão seguros. Os visitantes normais não conseguem ler este painel.")
