@@ -4,7 +4,7 @@ Usa a API gratuita da Groq (modelo Llama 3) através da biblioteca OpenAI.
 Interface profissional construída com Streamlit e CSS personalizado.
 """
 
-import streamlit as str
+import streamlit as st
 from openai import OpenAI
 
 # =============================================================================
@@ -18,45 +18,31 @@ st.set_page_config(
 )
 
 # =============================================================================
-# NOVO: VERIFICAÇÃO ANTECIPADA DA PASSWORD (Para controlo do CSS dinâmico)
+# VERIFICAÇÃO ANTECIPADA DA PASSWORD (Segura sem quebrar o CSS)
 # =============================================================================
-# Inicializa o campo na primeira execução para evitar erros
 if "campo_senha_admin" not in st.session_state:
     st.session_state["campo_senha_admin"] = ""
 
-# Determina se és tu com base no texto atual da caixa de input
 eh_admin = (st.session_state["campo_senha_admin"] == "Liljuice13..")
 
 # =============================================================================
-# CSS PERSONALIZADO – VISUAL CORPORATIVO + CONTROLO INTELIGENTE DO BOTÃO
+# CSS PERSONALIZADO – VISUAL CORPORATIVO
 # =============================================================================
-# Se NÃO fores admin, aplicamos CSS para sumir com o botão. Se FORES, o CSS não se aplica e o botão aparece!
-css_botao_manage = """
-    /* Oculta o widget de estado e assinaturas do Streamlit */
-    [data-testid="stStatusWidget"], .viewerBadge_link__1S16K, [class^="viewerBadge"] {
-        display: none !important;
-    }
-    /* Bloqueia o carregamento do elemento do botão Manage App */
-    iframe[src*="manage"], iframe[title="Manage app"] {
-        display: none !important;
-    }
-""" if not eh_admin else ""
-
 st.markdown(
-    f"""
+    """
 <style>
     /* Fundo geral da página */
-    .stApp {{
+    .stApp {
         background-color: #F0F4F8;
-    }}
+    }
 
     /* Barra lateral */
-    section[data-testid="stSidebar"] {{
+    section[data-testid="stSidebar"] {
         background-color: #0A2540;
         color: white;
         padding: 2rem 1rem;
-    }}
-    section[data-testid="stSidebar"] .stButton>button {{
+    }
+    section[data-testid="stSidebar"] .stButton>button {
         background-color: #2B4C7E;
         color: white;
         border-radius: 10px;
@@ -64,60 +50,76 @@ st.markdown(
         padding: 0.5rem 1rem;
         font-weight: bold;
         transition: all 0.2s ease;
-    }}
-    section[data-testid="stSidebar"] .stButton>button:hover {{
+    }
+    section[data-testid="stSidebar"] .stButton>button:hover {
         background-color: #1E3A5F;
         transform: scale(1.02);
-    }}
-    section[data-testid="stSidebar"] .stMarkdown {{
+    }
+    section[data-testid="stSidebar"] .stMarkdown {
         color: white;
-    }}
+    }
 
     /* Mensagens do chat */
-    div[data-testid="stChatMessage"] {{
+    div[data-testid="stChatMessage"] {
         border-radius: 15px;
         padding: 1rem;
         margin-bottom: 0.8rem;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         line-height: 1.5;
-    }}
+    }
 
     /* Mensagem do utilizador */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="user"]) {{
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="user"]) {
         background-color: #1E3A5F;
         color: white;
-    }}
+    }
 
     /* Mensagem do assistente */
-    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="assistant"]) {{
+    div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageIcon"][aria-label="assistant"]) {
         background-color: #FFFFFF;
         border: 1px solid #D1D9E0;
-    }}
+    }
 
     /* Campo de input do chat */
-    div[data-testid="stChatInput"] textarea {{
+    div[data-testid="stChatInput"] textarea {
         border-radius: 20px !important;
         border: 1px solid #CBD5E1 !important;
-    }}
+    }
 
     /* Ocultar menus e rodapés antigos do Streamlit */
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
-
-    /* Injeção dinâmica para esconder/mostrar o botão Manage App */
-    {css_botao_manage}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
 
     /* Ajustes para ecrãs pequenos */
-    @media (max-width: 768px) {{
-        section[data-testid="stSidebar"] {{
+    @media (max-width: 768px) {
+        section[data-testid="stSidebar"] {
             padding: 1rem 0.5rem;
         }
-    }}
+    }
 </style>
 """,
     unsafe_allow_html=True,
 )
+
+# =============================================================================
+# INJEÇÃO DO BLOQUEIO DO BOTÃO MANAGE APP (Apenas se NÃO for o dono autenticado)
+# =============================================================================
+if not eh_admin:
+    st.markdown(
+        """
+    <style>
+        /* Oculta completamente o botão Manage App para visitantes comuns */
+        [data-testid="stStatusWidget"], .viewerBadge_link__1S16K, [class^="viewerBadge"] {
+            display: none !important;
+        }
+        iframe[src*="manage"], iframe[title="Manage app"] {
+            display: none !important;
+        }
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
 
 # =============================================================================
 # PROMPT DE SISTEMA – BLINDAGEM RÍGIDA
@@ -188,7 +190,7 @@ with st.sidebar:
     
     if eh_admin:
         st.success("Modo Admin Ativo! 🛠️")
-        st.caption("O botão 'Manage app' voltou a aparecer no canto inferior direito apenas para ti.")
+        st.caption("O botão 'Manage app' voltou a aparecer no canto inferior direito.")
 
 
 # =============================================================================
@@ -253,3 +255,4 @@ if st.session_state.messages[-1]["role"] == "user":
 if eh_admin:
     st.markdown("---")
     st.subheader("🛠️ Painel de Gestão e Monitorização (Exclusivo)")
+    st.write("Bem-vindo, Afonso. Este painel está oculto para todos os utilizadores comuns.")
