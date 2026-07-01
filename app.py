@@ -1,5 +1,5 @@
 """
-Chaves Premium Concierge – Chatbot exclusivo sobre a cidade de Chaves, Portugal.
+Chaves Sigmabot – Chatbot exclusivo sobre a cidade de Chaves, Portugal.
 Usa a API gratuita da Groq (modelo Llama 3) através da biblioteca OpenAI.
 Interface profissional construída com Streamlit e CSS personalizado.
 """
@@ -11,7 +11,7 @@ from openai import OpenAI
 # CONFIGURAÇÃO DA PÁGINA
 # =============================================================================
 st.set_page_config(
-    page_title="Chaves Premium Concierge",
+    page_title="Chaves Sigmabot",
     page_icon="🏰",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -98,7 +98,7 @@ st.markdown(
 # PROMPT DE SISTEMA – BLINDAGEM RÍGIDA
 # =============================================================================
 SYSTEM_PROMPT = """
-Você é o 'Chaves Premium Concierge', um assistente virtual exclusivo da cidade de Chaves, Portugal.
+Você é o 'Chaves Sigmabot', um assistente virtual exclusivo da cidade de Chaves, Portugal.
 A sua única missão é fornecer informações precisas, úteis e encantadoras sobre Chaves, incluindo:
 - História, património (Castelo, Ponte de Trajano, etc.)
 - Termas e águas termais
@@ -125,7 +125,7 @@ if "messages" not in st.session_state:
 # BARRA LATERAL
 # =============================================================================
 with st.sidebar:
-    st.title("🏰 Chaves Premium Concierge")
+    st.title("🏰 Chaves Sigmabot")
     st.markdown(
         "O seu assistente pessoal para descobrir a encantadora cidade de Chaves, Portugal. "
         "Pergunte-me sobre o que visitar, onde comer ou as melhores termas!"
@@ -155,7 +155,7 @@ with st.sidebar:
 # =============================================================================
 # ÁREA PRINCIPAL DO CHAT
 # =============================================================================
-st.header("Conversa com o Concierge de Chaves")
+st.header("Conversa Sigmabot")
 
 # Mostrar histórico de mensagens (exceto a mensagem de sistema)
 for msg in st.session_state.messages:
